@@ -10,7 +10,7 @@ Secure, role-based finance backend with Node.js, TypeScript, Express, PostgreSQL
 ## Stack
 - **Node.js** + TypeScript + Express
 - **PostgreSQL** (Neon) + Prisma ORM
-- **Redis** (Render) + `express-rate-limit` ✅ **Active**
+- **Redis** (Render) + `express-rate-limit` ✅ **Active on Render**
 - **JWT** (`jsonwebtoken`) + `bcryptjs`
 - **Validation**: Zod
 - **Testing**: Jest + Supertest
