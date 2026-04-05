@@ -1,17 +1,21 @@
 import 'dotenv/config';
 import app from './app';
 import { prisma } from './config/database';
+import { validateEnv } from './utils/validateEnv';
 
 const PORT = Number(process.env.PORT || 3000);
 
 const server = app.listen(PORT, async () => {
   try {
+    // Validate environment variables at runtime startup
+    validateEnv();
+
     await prisma.$connect();
     console.log('Database connected');
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`API docs at http://localhost:${PORT}/api/docs`);
   } catch (error) {
-    console.error('Failed to connect to database:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 });
