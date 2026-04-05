@@ -2,7 +2,7 @@ import { Router } from 'express';
 import * as authController from './auth.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { authenticate } from '../../middlewares/auth.middleware';
-import { authLimiter } from '../../middlewares/rateLimiter.middleware';
+import { authLimiter, registerLimiter } from '../../middlewares/rateLimiter.middleware';
 import { bootstrapAdminSchema, loginSchema, registerSchema } from './auth.schema';
 
 const router = Router();
@@ -23,7 +23,7 @@ const router = Router();
  *       201:
  *         description: User registered successfully
  */
-router.post('/register', authLimiter, validate(registerSchema), authController.register);
+router.post('/register', registerLimiter, validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -43,7 +43,7 @@ router.post('/register', authLimiter, validate(registerSchema), authController.r
  */
 router.post(
   '/bootstrap-admin',
-  authLimiter,
+  registerLimiter,
   validate(bootstrapAdminSchema),
   authController.bootstrapAdmin,
 );
