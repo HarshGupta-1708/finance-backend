@@ -11,12 +11,15 @@ const server = app.listen(PORT, async () => {
     validateEnv();
 
     await prisma.$connect();
-    console.log('Database connected');
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`API docs at http://localhost:${PORT}/api/docs`);
+    console.log('✅ Database connected');
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`✅ API docs at http://localhost:${PORT}/api/docs`);
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ Failed to start server:', error instanceof Error ? error.message : error);
+    // In production, exit immediately if validation fails
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
   }
 });
 
