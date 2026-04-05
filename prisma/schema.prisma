@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VIEWER
+  ANALYST
+  ADMIN
+}
+
+enum RecordType {
+  INCOME
+  EXPENSE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model User {
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  passwordHash   String
+  role           Role              @default(VIEWER)
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  ownedRecords   FinancialRecord[] @relation("RecordOwner")
+  createdRecords FinancialRecord[] @relation("RecordCreator")
+  updatedRecords FinancialRecord[] @relation("RecordUpdater")
+  auditLogs      AuditLog[]        @relation("AuditPerformer")
+}
+
+model Category {
+  id          Int               @id @default(autoincrement())
+  name        String
+  type        RecordType
+  description String?
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  records     FinancialRecord[]
+
+  @@unique([name, type])
+  @@index([type, isActive])
+}
+
+model FinancialRecord {
+  id          String     @id @default(uuid())
+  amount      Decimal    @db.Decimal(15, 2)
+  type        RecordType
+  categoryId  Int
+  recordDate  DateTime   @db.Date
+  notes       String?
+  userId      String
+  createdBy   String
+  updatedBy   String?
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user        User       @relation("RecordOwner", fields: [userId], references: [id])
+  creator     User       @relation("RecordCreator", fields: [createdBy], references: [id])
+  updater     User?      @relation("RecordUpdater", fields: [updatedBy], references: [id])
+  category    Category   @relation(fields: [categoryId], references: [id])
+
+  @@index([deletedAt])
+  @@index([userId, recordDate])
+  @@index([type, recordDate])
+  @@index([categoryId, recordDate])
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  tableName   String
+  recordId    String
+  action      AuditAction
+  performedBy String
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?
+  createdAt   DateTime    @default(now())
+
+  performer   User        @relation("AuditPerformer", fields: [performedBy], references: [id])
+
+  @@index([tableName, recordId])
+  @@index([performedBy])
+  @@index([createdAt])
+}

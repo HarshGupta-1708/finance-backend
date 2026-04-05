@@ -1,0 +1,1017 @@
+{
+  "info": {
+    "name": "Finance Backend - Module Flows",
+    "_postman_id": "11e2d12f-4ffb-4e8c-9f17-2a7cf9b7fb01",
+    "description": "Flow-wise collection for Auth, Categories, Users, Records, and Dashboard modules.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const runId = pm.collectionVariables.get('runId') || Date.now().toString();",
+          "pm.collectionVariables.set('runId', runId);",
+          "if (!pm.collectionVariables.get('viewerEmail')) pm.collectionVariables.set('viewerEmail', `viewer.${runId}@finance.com`);",
+          "if (!pm.collectionVariables.get('viewerPassword')) pm.collectionVariables.set('viewerPassword', 'viewer@1234');",
+          "if (!pm.collectionVariables.get('viewerName')) pm.collectionVariables.set('viewerName', 'Viewer User');",
+          "if (!pm.collectionVariables.get('recordDate')) pm.collectionVariables.set('recordDate', new Date().toISOString().slice(0, 10));",
+          "if (!pm.collectionVariables.get('currentYear')) pm.collectionVariables.set('currentYear', String(new Date().getFullYear()));",
+          "if (!pm.collectionVariables.get('seedViewerEmail')) pm.collectionVariables.set('seedViewerEmail', 'viewer@finance.com');",
+          "if (!pm.collectionVariables.get('seedViewerPassword')) pm.collectionVariables.set('seedViewerPassword', 'viewer@1234');",
+          "if (!pm.collectionVariables.get('adminCreatedUserEmail')) pm.collectionVariables.set('adminCreatedUserEmail', `admin.created.${runId}@finance.com`);",
+          "if (!pm.collectionVariables.get('adminCreatedUserPassword')) pm.collectionVariables.set('adminCreatedUserPassword', 'created@1234');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@finance.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "admin@1234"
+    },
+    {
+      "key": "analystEmail",
+      "value": "analyst@finance.com"
+    },
+    {
+      "key": "analystPassword",
+      "value": "analyst@1234"
+    },
+    {
+      "key": "viewerEmail",
+      "value": ""
+    },
+    {
+      "key": "viewerPassword",
+      "value": ""
+    },
+    {
+      "key": "viewerName",
+      "value": ""
+    },
+    {
+      "key": "viewerToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "analystToken",
+      "value": ""
+    },
+    {
+      "key": "viewerUserId",
+      "value": ""
+    },
+    {
+      "key": "recordId",
+      "value": ""
+    },
+    {
+      "key": "recordDate",
+      "value": ""
+    },
+    {
+      "key": "currentYear",
+      "value": ""
+    },
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "seedViewerEmail",
+      "value": "viewer@finance.com"
+    },
+    {
+      "key": "seedViewerPassword",
+      "value": "viewer@1234"
+    },
+    {
+      "key": "seedViewerToken",
+      "value": ""
+    },
+    {
+      "key": "adminCreatedUserEmail",
+      "value": ""
+    },
+    {
+      "key": "adminCreatedUserPassword",
+      "value": ""
+    },
+    {
+      "key": "adminCreatedUserId",
+      "value": ""
+    },
+    {
+      "key": "incomeCategoryId",
+      "value": ""
+    },
+    {
+      "key": "expenseCategoryId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Auth Flow",
+      "description": "Register a viewer, login, verify /me, then get admin and analyst tokens.",
+      "item": [
+        {
+          "name": "Register Viewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{viewerName}}\",\n  \"email\": \"{{viewerEmail}}\",\n  \"password\": \"{{viewerPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201 or 409', function () { pm.expect([201,409]).to.include(pm.response.code); });",
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json?.data?.token) pm.collectionVariables.set('viewerToken', json.data.token);",
+                  "if (json?.data?.user?.id) pm.collectionVariables.set('viewerUserId', json.data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Viewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{viewerEmail}}\",\n  \"password\": \"{{viewerPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('viewerToken', json.data.token);",
+                  "if (json?.data?.user?.id) pm.collectionVariables.set('viewerUserId', json.data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Profile (Viewer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{viewerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json?.data?.id) pm.collectionVariables.set('viewerUserId', json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Seeded Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Seeded Analyst",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{analystEmail}}\",\n  \"password\": \"{{analystPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('analystToken', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Seeded Viewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{seedViewerEmail}}\",\n  \"password\": \"{{seedViewerPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('seedViewerToken', json.data.token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Categories Flow",
+      "description": "Resolve seeded category ids for later record operations.",
+      "item": [
+        {
+          "name": "List All Active Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolve Income Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories?type=INCOME"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const categories = pm.response.json().data || [];",
+                  "const target = categories.find((item) => item.name === 'Salary') || categories[0];",
+                  "if (target?.id) pm.collectionVariables.set('incomeCategoryId', String(target.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolve Expense Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories?type=EXPENSE"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const categories = pm.response.json().data || [];",
+                  "const target = categories.find((item) => item.name === 'Rent') || categories.find((item) => item.name === 'Food') || categories[0];",
+                  "if (target?.id) pm.collectionVariables.set('expenseCategoryId', String(target.id));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Users Flow (Admin)",
+      "description": "Admin-only user management flow using viewer user id captured from Auth flow.",
+      "item": [
+        {
+          "name": "Create Analyst User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Created Analyst\",\n  \"email\": \"{{adminCreatedUserEmail}}\",\n  \"password\": \"{{adminCreatedUserPassword}}\",\n  \"role\": \"ANALYST\",\n  \"isActive\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201 or 409', function () { pm.expect([201,409]).to.include(pm.response.code); });",
+                  "const json = pm.response.json();",
+                  "if (json?.data?.id) pm.collectionVariables.set('adminCreatedUserId', json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users?page=1&limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Viewer By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{viewerUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Viewer Role to ANALYST",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ANALYST\"\n}"
+            },
+            "url": "{{baseUrl}}/api/users/{{viewerUserId}}/role"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Toggle Viewer Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{viewerUserId}}/status"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Toggle Viewer Status Back",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{viewerUserId}}/status"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soft Delete Viewer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{viewerUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2b. Access Control Flow",
+      "description": "Verification of viewer restrictions and allowed dashboard access.",
+      "item": [
+        {
+          "name": "Viewer Summary (Seeded Viewer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{seedViewerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/summary"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer Activity (Seeded Viewer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{seedViewerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/activity?limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer Records Forbidden",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{seedViewerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/records?page=1&limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer Create Record Forbidden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{seedViewerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 999,\n  \"type\": \"INCOME\",\n  \"categoryId\": {{incomeCategoryId}},\n  \"recordDate\": \"{{recordDate}}\",\n  \"notes\": \"Viewer should be blocked\"\n}"
+            },
+            "url": "{{baseUrl}}/api/records"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer Categories Forbidden",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{seedViewerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Records Flow (Analyst)",
+      "description": "Analyst CRUD flow for financial records.",
+      "item": [
+        {
+          "name": "Create Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"type\": \"INCOME\",\n  \"categoryId\": {{incomeCategoryId}},\n  \"recordDate\": \"{{recordDate}}\",\n  \"notes\": \"Monthly salary\"\n}"
+            },
+            "url": "{{baseUrl}}/api/records"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json?.data?.id) pm.collectionVariables.set('recordId', json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/records?page=1&limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Record By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/records/{{recordId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5500,\n  \"recordDate\": \"{{recordDate}}\",\n  \"notes\": \"Updated amount\"\n}"
+            },
+            "url": "{{baseUrl}}/api/records/{{recordId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Record (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/records/{{recordId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Records With Filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/records?type=INCOME&category=Salary&search=salary&page=1&limit=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Dashboard Flow",
+      "description": "Analytics endpoints for analyst and admin.",
+      "item": [
+        {
+          "name": "Summary (Analyst)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/summary"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Category Breakdown (Analyst)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Monthly Trends (Analyst)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/trends/monthly?year={{currentYear}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recent Activity (Analyst)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{analystToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/activity?limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summary (Admin, all users)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard/summary"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
