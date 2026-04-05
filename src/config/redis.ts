@@ -6,25 +6,25 @@ const shouldInitializeRedis = process.env.RATE_LIMIT_USE_REDIS === 'true' ||
 
 export const redis: Redis | null = shouldInitializeRedis 
   ? new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-      lazyConnect: true,
-      enableOfflineQueue: false,
-      maxRetriesPerRequest: 1,
+      enableOfflineQueue: true,
+      maxRetriesPerRequest: null,
       retryStrategy: (times) => {
-        if (times > 3) {
-          console.warn('⚠️  Redis: Max retries exceeded, giving up on this connection');
+        const delay = Math.min(times * 50, 2000);
+        if (times > 10) {
+          console.warn('⚠️  Redis: Max retries exceeded (10+), giving up');
           return null;
         }
-        return Math.min(times * 50, 2000);
+        return delay;
       },
     })
   : null;
 
 if (redis) {
-  redis.on('error', (err) => {
-    console.warn('⚠️  Redis connection error (rate limiting falls back to memory):', err.message);
-  });
-
   redis.on('connect', () => {
     console.log('✅ Redis connected for rate limiting');
+  });
+
+  redis.on('error', (err) => {
+    console.error('❌ Redis error:', err.message);
   });
 }
