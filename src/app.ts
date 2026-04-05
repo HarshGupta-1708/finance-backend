@@ -24,6 +24,37 @@ app.use(generalLimiter);
 
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
+// Root route - API info
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'Finance Dashboard API',
+    version: '1.0.0',
+    status: 'Running',
+    endpoints: {
+      documentation: '/api/docs',
+      health: '/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      records: '/api/records',
+      categories: '/api/categories',
+      dashboard: '/api/dashboard',
+    },
+    features: [
+      'User & Role Management (VIEWER, ANALYST, ADMIN)',
+      'Financial Records CRUD with Soft Delete',
+      'Dashboard Analytics & Reports',
+      'JWT Authentication (7-day tokens)',
+      'Rate Limiting (Redis-backed)',
+      'Pagination & Search',
+      'Role-Based Access Control',
+    ],
+    database: 'PostgreSQL (Neon)',
+    cache: 'Redis',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/users', usersRoutes);
@@ -31,11 +62,22 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'OK',
+    service: 'Finance Dashboard API',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+    hint: 'Visit / for API info or /api/docs for Swagger documentation',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use(errorHandler);
