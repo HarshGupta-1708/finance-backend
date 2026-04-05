@@ -6,15 +6,14 @@ const shouldUseRedisStore =
   process.env.RATE_LIMIT_USE_REDIS === 'true' ||
   (process.env.NODE_ENV === 'production' && Boolean(process.env.REDIS_URL));
 
-const createStore = () => {
-  // Return undefined if Redis is not initialized or should not be used
-  if (!shouldUseRedisStore || !redis) {
-    return undefined;
-  }
+// Create store once at module initialization
+let store: RedisStore | undefined;
 
+if (shouldUseRedisStore && redis) {
   try {
-    const redisClient = redis; // Narrow the type for TypeScript
-    return new RedisStore({
+    console.log('✅ Initializing Redis rate limiter store');
+    const redisClient = redis; // Capture redis in closure for type safety
+    store = new RedisStore({
       sendCommand: async (...args: string[]): Promise<RedisReply> => {
         const [command, ...rest] = args;
         return (await redisClient.call(command, ...rest)) as RedisReply;
@@ -23,12 +22,14 @@ const createStore = () => {
     });
   } catch (error) {
     console.warn(
-      '⚠️  Failed to initialize Redis rate limiter store, using memory store:',
+      '⚠️  Failed to initialize Redis rate limiter store, falling back to memory store:',
       error instanceof Error ? error.message : String(error),
     );
-    return undefined;
+    store = undefined;
   }
-};
+} else {
+  console.log('⚠️  Using memory store for rate limiting (Redis not available or disabled)');
+}
 
 const sharedOptions = {
   standardHeaders: true,
@@ -42,7 +43,7 @@ export const generalLimiter = rateLimit({
     success: false,
     message: 'Too many requests, please try again later.',
   },
-  store: createStore(),
+  store,
   ...sharedOptions,
 });
 
@@ -53,6 +54,6 @@ export const authLimiter = rateLimit({
     success: false,
     message: 'Too many login attempts, please wait.',
   },
-  store: createStore(),
+  store,
   ...sharedOptions,
 });
