@@ -59,7 +59,7 @@ export const authLimiter = rateLimit({
 });
 
 export const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 5 * 60 * 1000, // 5 minutes (for testing)
   limit: 5,
   message: {
     success: false,
