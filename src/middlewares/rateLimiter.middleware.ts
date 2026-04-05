@@ -7,21 +7,23 @@ const shouldUseRedisStore =
   (process.env.NODE_ENV === 'production' && Boolean(process.env.REDIS_URL));
 
 const createStore = () => {
-  if (!shouldUseRedisStore) {
+  // Return undefined if Redis is not initialized or should not be used
+  if (!shouldUseRedisStore || !redis) {
     return undefined;
   }
 
   try {
+    const redisClient = redis; // Narrow the type for TypeScript
     return new RedisStore({
       sendCommand: async (...args: string[]): Promise<RedisReply> => {
         const [command, ...rest] = args;
-        return (await redis.call(command, ...rest)) as RedisReply;
+        return (await redisClient.call(command, ...rest)) as RedisReply;
       },
       prefix: 'rl:',
     });
   } catch (error) {
     console.warn(
-      'Failed to initialize Redis rate limiter store, using memory store:',
+      '⚠️  Failed to initialize Redis rate limiter store, using memory store:',
       error instanceof Error ? error.message : String(error),
     );
     return undefined;
