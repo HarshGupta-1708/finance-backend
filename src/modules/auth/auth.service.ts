@@ -20,6 +20,12 @@ const generateToken = (user: { id: string; email: string; role: Role }) => {
 };
 
 export const register = async (input: RegisterInput) => {
+  // Check JWT_SECRET is configured first, before any database operations
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new AppError('JWT secret is not configured', 500);
+  }
+
   const existing = await prisma.user.findUnique({
     where: { email: input.email },
   });
@@ -50,6 +56,12 @@ export const register = async (input: RegisterInput) => {
 };
 
 export const bootstrapAdmin = async (input: RegisterInput) => {
+  // Check JWT_SECRET is configured first, before any database operations
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new AppError('JWT secret is not configured', 500);
+  }
+
   const existingActiveAdminCount = await prisma.user.count({
     where: {
       role: Role.ADMIN,
@@ -94,6 +106,12 @@ export const bootstrapAdmin = async (input: RegisterInput) => {
 };
 
 export const login = async (input: LoginInput) => {
+  // Check JWT_SECRET is configured first
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new AppError('JWT secret is not configured', 500);
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: input.email },
   });
